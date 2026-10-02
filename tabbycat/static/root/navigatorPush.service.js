@@ -3,7 +3,7 @@
 
 var getTitle = function (title) {
   if (title === '') {
-    title = 'Tabbycat Notification'
+    title = 'RoparCat Notification'
   }
   return title
 }

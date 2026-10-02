@@ -99,7 +99,7 @@ class TournamentConfigureForm(ModelForm):
             (DRAW_FORMAT_ROUND_ROBIN, _("Round robin")),
         ),
         label=_("Draw format"),
-        help_text=_("How preliminary rounds are drawn. The first option matches Tabbycat’s usual default (random draw "
+        help_text=_("How preliminary rounds are drawn. The first option matches RoparCat’s usual default (random draw "
                     "in round 1, then power-pairing). Round robin opens an extra step to set parallel panels and how "
                     "many preliminary rounds to create."),
     )
@@ -171,7 +171,7 @@ class RoundRobinPrelimSetupForm(Form):
         min_value=1,
         initial=1,
         label=_("Parallel preliminary panels per schedule slot"),
-        help_text=_("With 1, each schedule slot has one database round. With 2, Tabbycat creates two rounds per slot "
+        help_text=_("With 1, each schedule slot has one database round. With 2, RoparCat creates two rounds per slot "
                     "(e.g. A and B) that share the same “current round” slot for navigation and feedback."),
     )
 

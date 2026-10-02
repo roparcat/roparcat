@@ -619,7 +619,7 @@ class PublicScheduleICalendarView(PublicTournamentPageMixin, View):
         calendar = ICalendar(
             name=_("%(tournament)s Schedule") % {'tournament': self.tournament.name},
             timezone_name=settings.TIME_ZONE,
-            prodid='-//Tabbycat//Tournament Schedule//EN',
+            prodid='-//RoparCat//Tournament Schedule//EN',
         )
         for event in self.tournament.scheduleevent_set.select_related('round'):
             calendar.add_event(

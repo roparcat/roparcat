@@ -392,7 +392,7 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Tabbycat API',
+    'TITLE': 'RoparCat API',
     'DESCRIPTION': 'Parliamentary debate tabulation software',
     'VERSION': '1.4.0',
     'SERVE_INCLUDE_SCHEMA': False,
@@ -402,7 +402,7 @@ SPECTACULAR_SETTINGS = {
     'EXTENSIONS_INFO': {
         "x-logo": {
             "url": "/static/logo.svg",
-            "altText": "Tabbycat logo",
+            "altText": "RoparCat logo",
         },
     }
 }

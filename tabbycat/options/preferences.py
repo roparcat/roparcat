@@ -1435,7 +1435,7 @@ class EmailWebhookKey(StringPreference):
 
 @tournament_preferences_registry.register
 class EnableEmailBallotReceipts(BooleanPreference):
-    help_text = _("Enables a copy of adjudicators' ballots to be automatically sent to them (by email) after they are entered in Tabbycat (for confirmation or checking)")
+    help_text = _("Enables a copy of adjudicators' ballots to be automatically sent to them (by email) after they are entered in RoparCat (for confirmation or checking)")
     verbose_name = _("Ballot receipts")
     section = email
     name = 'enable_ballot_receipts'
