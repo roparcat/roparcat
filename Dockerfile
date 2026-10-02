@@ -3,7 +3,7 @@
 
 # Grab a python image
 FROM python:3.11
-SHELL ["/bin/bash", "--login", "-c"]
+SHELL ["/bin/bash", "--login", "-o", "pipefail", "-c"]
 
 # Just needed for all things python (note this is setting an env variable)
 ENV PYTHONUNBUFFERED 1
@@ -13,7 +13,7 @@ ENV IN_DOCKER 1
 # Setup Node/NPM
 RUN apt-get update
 RUN apt-get install -y curl nginx
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
 # Copy all our files into the baseimage and cd to that directory
 WORKDIR /tcd
