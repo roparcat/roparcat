@@ -83,3 +83,4 @@ nosetests.xml
 
 # Redis
 dump.rdb
+*.dump

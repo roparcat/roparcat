@@ -12,6 +12,10 @@ RoparCat is a fork of Tabbycat for IIT Ropar debate tournaments.
 
 ## Docker gotchas
 
+- `docker compose up` refuses to start without `SECRET_KEY` in `.env` (gitignored, never baked into the image). Create it once per machine: `printf 'SECRET_KEY=%s\n' "$(openssl rand -hex 32)" > .env`. Changing it logs everyone out; private URLs are unaffected.
+- `DEBUG=0` in `docker-compose.yml`: the site is public, so no tracebacks. Set it to 1 locally only when debugging.
+- All services have `restart: unless-stopped`, so they come back after a crash or reboot (as long as Docker itself starts).
+
 - Source is copied into the image at build time, not mounted. Rebuild (`docker compose up -d --build`) before running tests or checking pages, or the container runs old code.
 - The image installs only non-dev Python packages, so test modules that import `selenium` fail to load (`No module named 'selenium'`). Install it in the running container first: `docker compose exec web pip install selenium`.
 
@@ -29,7 +33,6 @@ Done:
 - `apd8team` public draw set to "all released rounds" (`/apd8team/draw/round/<n>/`); everything else public stays off.
 
 Next:
-- After a reboot: `docker compose up -d` (services have no restart policy, so they won't come back on their own).
 - Port 8000 is published on `0.0.0.0`, so it's also reachable on the LAN; with Funnel (proxies from localhost) it could be bound to `127.0.0.1`.
 - Email: no provider configured, and `docker.py` reads no `EMAIL_*` settings yet (copy the block from `heroku.py`, secrets in `.env`). No `apd8team` participant has an email address. Send emails while browsing via the Funnel URL, not localhost, since links are built from the request host.
 - For the APD test: generate and release the Round 1 draw; decide whether to apply the "Use Private URLs" preset (ballot and feedback entry via private links). Only Round 1 exists; add more rounds in Edit Database.

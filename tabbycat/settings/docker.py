@@ -6,6 +6,10 @@ import os
 
 ALLOWED_HOSTS = ["*"]
 
+# docker-compose.yml refuses to start without SECRET_KEY in .env; the
+# fallback to core.py's public key only covers collectstatic at build time
+SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)  # noqa: F821 (from core.py)
+
 # nginx forwards the original scheme (see config/nginx.conf)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

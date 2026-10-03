@@ -10,6 +10,7 @@
 
 services:
   db:
+    restart: unless-stopped
     image: postgres:18
     environment:
       - POSTGRES_PASSWORD=tabbycat
@@ -19,11 +20,13 @@ services:
       - pgdata:/var/lib/postgresql
 
   redis:
+    restart: unless-stopped
     image: redis:6
     volumes:
       - redis_data:/data
 
   web:
+    restart: unless-stopped
     build: .
     # Hack to wait until Postgres is up before running things
     command:
@@ -40,7 +43,8 @@ services:
     expose:
       - "8000"
     environment:
-      - DEBUG=1
+      - DEBUG=0
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY in .env (see CLAUDE.md)}
       - IN_DOCKER=1
       - DISABLE_SENTRY=1
       - DOCKER_REDIS=1
@@ -50,6 +54,7 @@ services:
     working_dir: /tcd
 
   worker:
+    restart: unless-stopped
     build: .
     # Hack to wait until migration is done before running things
     command:
@@ -64,7 +69,8 @@ services:
       - db
       - redis
     environment:
-      - DEBUG=1
+      - DEBUG=0
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY in .env (see CLAUDE.md)}
       - IN_DOCKER=1
       - DISABLE_SENTRY=1
       - DOCKER_REDIS=1
