@@ -6,6 +6,9 @@ import os
 
 ALLOWED_HOSTS = ["*"]
 
+# nginx forwards the original scheme (see config/nginx.conf)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
