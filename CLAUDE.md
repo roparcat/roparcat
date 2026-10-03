@@ -18,21 +18,36 @@ RoparCat is a fork of Tabbycat for IIT Ropar debate tournaments.
 - Source is copied into the image at build time, not mounted. Rebuild (`docker compose up -d --build`) before running tests or checking pages, or the container runs old code.
 - The image installs only non-dev Python packages, so test modules that import `selenium` fail to load (`No module named 'selenium'`). Install it in the running container first: `docker compose exec web pip install selenium`.
 
-## Current status (as of 2026-10-03)
+## Current status (as of 2026-10-04)
 
 Done:
 - Fork runs in docker compose (web, worker, db, redis) at http://localhost:8000 on the test PC.
 - Dockerfile fails loudly on bad downloads (`d591509bd`). User-facing name is RoparCat (`4c773db69`); Tabbycat credited in footer and meta description.
 - Public via Tailscale Funnel at https://roparcat.tailcee4ed.ts.net/. nginx forwards `X-Forwarded-Proto` and `docker.py` sets `SECURE_PROXY_SSL_HEADER`, so absolute links (private URLs, emails) are `https://` (`386a14ca4`).
 - Hardened for public hosting (`056d9f345`): `SECRET_KEY` from `.env`, `DEBUG=0`, `restart: unless-stopped`, `*.dump` ignored. Pushed to `origin/develop`.
-- Email over SMTP (`573f22ff4`): settings come from `.env`; not active on the test PC yet (see Other open items).
+- Email over SMTP (`573f22ff4`): settings come from `.env`. Active on AWS (new app password, SMTP login verified 2026-10-04); not on the test PC.
 - Test tournaments in the `pgdata` volume:
   - `australs24team`: demo, rounds 1-3 simulated, public draw/standings/tabs on.
-  - `apd8team`: dummy APD (UADC preset), 8 teams x 3 speakers, 5 adjs, 1 round (no draw yet), private URLs for everyone. Public draw on ("all released rounds", `/apd8team/draw/round/<n>/`); every other public page off. Keys live in `Person.url_key`; never run `privateurls generate --overwrite` (breaks shared links).
+  - `apd8team`: dummy APD (UADC preset), 8 teams x 3 speakers, 5 adjs, 1 round (Round 1 draw released), private URLs for everyone. Public draw on ("all released rounds", `/apd8team/draw/round/<n>/`); every other public page off. Keys live in `Person.url_key`; never run `privateurls generate --overwrite` (breaks shared links).
 
-## In progress: deploy to AWS (live 2026-10-03 to 2026-10-08)
+## Production: AWS EC2 (live since 2026-10-04, until the user shuts it down, around 2026-10-08)
 
 The test PC is only for development. Production runs on one EC2 instance, reached through the same Funnel URL.
+
+Deployed 2026-10-04: `m7i-flex.large` (2 vCPU, 7.6 GB, 105 GB disk), Ubuntu 26.04, region `ap-southeast-2` (Sydney, not Mumbai: about 150 ms from India, acceptable). SSH as `ubuntu` to the instance's public IP (EC2 console; kept out of this public repo) with the `eristic26.pem` key (kept in `~/.ssh` on the test PC). Code in `~/roparcat` on `develop`; DB restored from the test PC (both tournaments, all 29 `apd8team` keys). Tailscale node `roparcat`, Funnel on 8000. Hourly `pg_dump` cron into `~/backups/`. The old Windows node was renamed/removed; until its Tailscale is quit or reconnects, the test PC resolves the URL to itself and fails (other devices are fine).
+
+Checked 2026-10-04: port 8000 not reachable from the internet (security group closed; only Funnel serves the site), Funnel on, email settings loaded and SMTP login OK, backup cron command tested under cron's environment (first run on the next UTC hour), no automatic reboots configured, one superuser.
+
+Still to do (user):
+- Send a test email from the home page tool while logged in via the Funnel URL.
+- Revoke the first app password (see Other open items).
+- Open the site from a phone on mobile data.
+- Tailscale key for `roparcat` expires 2027-04-01: no risk for this event, but disable key expiry if the server will be kept.
+- Quit Tailscale on the test PC (or `tailscale down`); it still resolves the URL to its old address.
+- Set an AWS budget alert if not done.
+- `scp` the newest `~/backups/*.dump` to a PC after each round.
+
+How it was set up:
 
 - Account: new-style AWS Free plan ($100+ credits, 6 months; the old 12-month free tier no longer exists). Region `ap-south-1` (Mumbai). Set a budget alert.
 - Instance: Ubuntu 24.04, free-tier-eligible with >= 2 GB RAM (`t3.small` + 2 GB swap, or `m7i-flex.large`), 30 GB gp3. Security group: SSH from "My IP" only; no other ports (Funnel is outbound).
@@ -43,7 +58,7 @@ The test PC is only for development. Production runs on one EC2 instance, reache
   4. Move the DB: on the test PC `pg_dump -Fc -f /tmp/roparcat.dump` inside `db`, `docker compose cp` it out, `scp` it up. On the server `docker compose up -d db`, copy it in, `pg_restore --clean --if-exists --no-owner`, then `docker compose up -d --build`. Check `/apd8team/privateurls/rgl1014x/` returns 200 (proves keys survived). Don't redirect the dump with `>` in PowerShell, it corrupts it.
   5. Tailscale: `tailscale funnel reset` on the old machine, remove/rename it in the admin console so the name `roparcat` is free, then on the server `tailscale up --hostname=roparcat` and `tailscale funnel --bg 8000`. Disable key expiry for the node. Test from a phone on mobile data.
   6. Hourly backups via cron (`docker compose exec -T db pg_dump -U tabbycat -Fc tabbycat > ~/backups/...`); `scp` them down after each round.
-  7. Auto-stop: `sudo systemd-run --on-calendar="2026-10-08 23:59 Asia/Kolkata" /sbin/poweroff`. Terminate the instance once the final backup is safe.
+  7. Shutdown is manual: the user stops/terminates the instance themselves after taking the final backup. Never schedule automatic shutdowns.
 - After cutover, the EC2 copy is the live one. Changes on the test PC don't carry over.
 
 ## Planned: new RoparCat icon
@@ -80,10 +95,10 @@ Plan:
 4. Don't do this while the tournament is live (2026-10-03 to 08) unless it's tested on the test PC first; a rebuild restarts the site.
 
 ## Other open items
-- REMINDER: revoke the first `debsoc@iitrpr.ac.in` app password (it was pasted in a chat on 2026-10-03). Create a new one for the AWS server's `.env`, confirm email works there, then revoke the old one in the Google account (Security > App passwords). The test PC's `.env` still holds the old one; replace or delete those lines too.
+- REMINDER: revoke the first `debsoc@iitrpr.ac.in` app password (it was pasted in a chat on 2026-10-03) in the Google account (Security > App passwords). The AWS server already uses a different, new app password (checked), and the old lines were deleted from the test PC's `.env`, so revoking breaks nothing.
 - Test PC (2026-10-04): C: filled up during a rebuild and crashed Docker; data was fine and the site came back via `restart: unless-stopped`. Rebuilds then failed on a flaky connection (pypi timeouts), so the test PC still runs the image from before `573f22ff4`: email is not active there. Email gets enabled and tested on AWS instead. Watch free disk space before rebuilding (`docker builder prune -af` frees build cache; the volume is untouched).
 - Email: SMTP via the society account `debsoc@iitrpr.ac.in` (Google Workspace, app password). `docker.py` reads `DEFAULT_FROM_EMAIL`, `EMAIL_HOST` (`smtp.gmail.com`), `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_PORT` (587), `EMAIL_USE_TLS` from `.env` (compose passes `.env` to web and worker via `env_file`); without `EMAIL_HOST` no email is sent. The password lives only in `.env`, never in git. Each server needs these lines in its own `.env`. No `apd8team` participant has an email address yet. Send emails while browsing via the Funnel URL, not localhost, since links are built from the request host.
-- APD test: generate and release the Round 1 draw; decide on the "Use Private URLs" preset (ballot and feedback via private links). Only Round 1 exists; add rounds in Edit Database.
+- APD test: Round 1 draw is released. Still: decide on the "Use Private URLs" preset (ballot and feedback via private links). Only Round 1 exists; add rounds in Edit Database.
 - Port 8000 is published on `0.0.0.0`; with Funnel it could be bound to `127.0.0.1`.
 - Decide on the upstream donation text, the "Our Organisation" footer block, the 500 page bug-report links, and `ADMINS` in `tabbycat/settings/core.py`.
 - 5 apps on `develop` (actionlog, checkins, participants, results, users) have model changes with no migration (pre-existing, from upstream).
