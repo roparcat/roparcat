@@ -108,7 +108,8 @@ class InviteUserForm(forms.Form):
         messages = []
         records = []
         email_field_name = User.get_email_field_name()
-        extra_email_context = {**(extra_email_context or {}), 'tournament': self.tournament}
+        extra_email_context = {**(extra_email_context or {}), 'tournament': self.tournament,
+                               'role': self.cleaned_data['role']}
 
         for email in self.cleaned_data['emails']:
             user, created = self._get_or_create_user(email)

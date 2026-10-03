@@ -61,7 +61,7 @@ How it was set up:
   7. Shutdown is manual: the user stops/terminates the instance themselves after taking the final backup. Never schedule automatic shutdowns.
 - After cutover, the EC2 copy is the live one. Changes on the test PC don't carry over.
 
-## Logo (done 2026-10-04, not yet deployed)
+## Logo (done and deployed 2026-10-04, `d6bf1f9ee`)
 
 The Tabbycat cat is replaced everywhere by the DebSoc IIT Ropar podium logo (brown `#4B2102`; source PNG from the user). The Tabbycat credit stays in the footer (AGPL rule above).
 - `static/logo.png` (256px, transparent outside, white "D" kept) is the nav logo: `templates/nav/logo.html` is now an `<img>` with a white rounded background so it shows on the dark admin sidebar. `logo_local.html` just includes it.
@@ -87,6 +87,7 @@ Plan:
 4. Don't do this while the tournament is live (2026-10-03 to 08) unless it's tested on the test PC first; a rebuild restarts the site.
 
 ## Other open items
+- Account invites (Configuration > Invite User): custom wording in `users/templates/account_invitation_*` names the role and says a separate adjudicator private-URL email follows (all officials also judge). `users/forms.py` passes `role` into the email context. Links stay valid 3 days (Django default), not 24h as the docs say. Send while browsing via the Funnel URL. Roles: Tabulation Director = Rhydam, Dhaval; Equity = Vedant, Rishabh, Arfan; Adjudication Core (CAP, `adj_core` ticked) = Aairah, Aashay, Shivang, Madhav. Thoihenba is superuser. All 14 adjudicators base score 5 for now.
 - REMINDER: revoke the first `debsoc@iitrpr.ac.in` app password (it was pasted in a chat on 2026-10-03) in the Google account (Security > App passwords). The AWS server already uses a different, new app password (checked), and the old lines were deleted from the test PC's `.env`, so revoking breaks nothing.
 - Test PC (2026-10-04): C: filled up during a rebuild and crashed Docker; data was fine and the site came back via `restart: unless-stopped`. Rebuilds then failed on a flaky connection (pypi timeouts), so the test PC still runs the image from before `573f22ff4`: email is not active there. Email gets enabled and tested on AWS instead. Watch free disk space before rebuilding (`docker builder prune -af` frees build cache; the volume is untouched).
 - Email: SMTP via the society account `debsoc@iitrpr.ac.in` (Google Workspace, app password). `docker.py` reads `DEFAULT_FROM_EMAIL`, `EMAIL_HOST` (`smtp.gmail.com`), `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_PORT` (587), `EMAIL_USE_TLS` from `.env` (compose passes `.env` to web and worker via `env_file`); without `EMAIL_HOST` no email is sent. The password lives only in `.env`, never in git. Each server needs these lines in its own `.env`. Participants need email addresses (CSV import or Edit Database) before private-URL emails reach anyone. Send emails while browsing via the Funnel URL, not localhost, since links are built from the request host.

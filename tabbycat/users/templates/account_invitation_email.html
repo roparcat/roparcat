@@ -1,15 +1,28 @@
-{% load debate_tags i18n %}
+{% load debate_tags i18n %}{% autoescape off %}
 {% blocktrans trimmed %}
 Hello!
 {% endblocktrans %}
 
-{% blocktrans trimmed with name=tournament.name %}
-An administrator for the RoparCat site hosting {{ name }} has invited you to create an user account on their site, at {{ protocol }}://{{ domain }}.
+{% blocktrans trimmed with name=tournament.name role=role.name %}
+You've been added to {{ name }} on RoparCat as {{ role }}.
 {% endblocktrans %}
 
-{% trans 'If you accept, please use the link below to activate your account' %}
+{% trans 'Create your account here (you choose your own username and password):' %}
 {{ protocol }}://{{ domain }}{% tournamenturl 'accept-invitation' uidb64=uid token=token %}
 
 {% blocktrans trimmed %}
-If you do not accept, there is no action to be taken.
+This link is only for you and stays valid for 3 days. If it expires, ask the tab team for a new invite.
 {% endblocktrans %}
+
+{% blocktrans trimmed with role=role.name %}
+You'll also get a separate email with your private URL for adjudicating. That link shows your room and panel each round, and it's where you submit your own ballots and feedback. Keep both: this account is for your {{ role }} work, and the private URL is for your own judging.
+{% endblocktrans %}
+
+{% blocktrans trimmed %}
+If you weren't expecting this, you can ignore this email.
+{% endblocktrans %}
+
+{% blocktrans trimmed with name=tournament.short_name %}
+{{ name }} Tab Team, DebSoc IIT Ropar
+{% endblocktrans %}
+{% endautoescape %}
