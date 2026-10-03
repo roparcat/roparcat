@@ -61,27 +61,19 @@ How it was set up:
   7. Shutdown is manual: the user stops/terminates the instance themselves after taking the final backup. Never schedule automatic shutdowns.
 - After cutover, the EC2 copy is the live one. Changes on the test PC don't carry over.
 
-## Planned: new RoparCat icon
+## Logo (done 2026-10-04, not yet deployed)
 
-Replace the Tabbycat cat logo with a RoparCat one. Keep the Tabbycat credit in the footer (AGPL rule above).
-
-Where the icon lives (all under `tabbycat/`):
-- `templates/nav/logo.html`: inline SVG used in the top nav (33px) and admin sidebar (18px). Uses `{{ width }}` and `{{ alt }}`; keep those.
-- `templates/nav/logo_local.html` and `static/logo-local.svg`: variant shown only when `ON_LOCAL` (not in docker). Replace too or delete.
-- `static/logo.svg` (also the API docs logo, `settings/core.py` `x-logo`), `static/logo-16x16.png`, `logo-32x32.png`, `logo-48x48.png`, `static/root/favicon.ico`, `static/safari-tab.svg` (single-colour mask icon), `static/logo-social.png` (og:image link previews).
-- `templates/base.html`: `<link rel="icon">` tags; `mask-icon` colour is hardcoded `rgb(102, 61, 160)`.
-
-Plan:
-1. Get the new design as one square SVG (works at 16px, readable as a single colour for `safari-tab.svg`).
-2. Export the PNG sizes, the `.ico` (16/32/48 in one file) and a 1200x630 `logo-social.png`.
-3. Swap the files keeping the same names, so no template changes beyond `logo.html`'s inline SVG and the mask colour.
-4. Rebuild, check tab icon, nav, admin sidebar, and a link preview. Browsers cache favicons hard; test in a private window.
+The Tabbycat cat is replaced everywhere by the DebSoc IIT Ropar podium logo (brown `#4B2102`; source PNG from the user). The Tabbycat credit stays in the footer (AGPL rule above).
+- `static/logo.png` (256px, transparent outside, white "D" kept) is the nav logo: `templates/nav/logo.html` is now an `<img>` with a white rounded background so it shows on the dark admin sidebar. `logo_local.html` just includes it.
+- Same artwork in `static/logo-16x16.png`, `logo-32x32.png`, `logo-48x48.png` (favicons, push-notification icon), `static/root/favicon.ico` (16/32/48), `static/logo.svg` (PNG embedded; API docs logo) and `static/logo-social.png` (1200x630 link preview).
+- Removed `safari-tab.svg` and its `mask-icon` link (a mask icon needs a single-colour vector we don't have; Safari falls back to the favicon), and the unused `logo-local.svg`.
+- Static files go through collectstatic (manifest storage), so the image must be rebuilt for the new files to exist. Browsers cache favicons hard; check in a private window.
 
 ## Planned: minor colour scheme and layout changes
 
 Colours (SCSS, compiled at image build, so rebuild to see changes):
 - Brand/primary: `$purple: #663da0` in `templates/scss/components/custom.scss` (Bootstrap theme colours: `$green`, `$blue`, `$orange`, `$red` are beside it). Changing `$purple` recolours buttons, links and highlights site-wide.
-- Same purple is hardcoded in `templates/base.html` (mask-icon), `templates/nav/logo.html` (gradient) and `checkins/templates/CheckInScanContainer.vue` (QR scan outline). Update them to match.
+- Same purple is hardcoded in `checkins/templates/CheckInScanContainer.vue` (QR scan outline). Update it to match. The new logo brown `#4B2102` is a natural primary colour.
 - Layout colours: `templates/scss/components/variables.scss` (`$sidebar-bg: #333c47`, table hover, navbar/footer background and border).
 - Leave the gender/break/region/conflict/ranking colours in `variables.scss` alone; they encode meaning in the allocation UI.
 
