@@ -26,7 +26,7 @@ Done:
 - Public via Tailscale Funnel at https://roparcat.tailcee4ed.ts.net/. nginx forwards `X-Forwarded-Proto` and `docker.py` sets `SECURE_PROXY_SSL_HEADER`, so absolute links (private URLs, emails) are `https://` (`386a14ca4`).
 - Hardened for public hosting (`056d9f345`): `SECRET_KEY` from `.env`, `DEBUG=0`, `restart: unless-stopped`, `*.dump` ignored. Pushed to `origin/develop`.
 - Email over SMTP (`573f22ff4`): settings come from `.env`. Active on AWS (new app password, SMTP login verified 2026-10-04); not on the test PC.
-- Test tournaments in the `pgdata` volume:
+- Dummy tournaments `australs24team` and `apd8team` were deleted from production on 2026-10-04 (backup on the server: `~/backups/roparcat-before-deleting-dummies.dump`); the test PC's `pgdata` volume still has them. Production now holds no tournaments until the real one is created. What they were:
   - `australs24team`: demo, rounds 1-3 simulated, public draw/standings/tabs on.
   - `apd8team`: dummy APD (UADC preset), 8 teams x 3 speakers, 5 adjs, 1 round (Round 1 draw released), private URLs for everyone. Public draw on ("all released rounds", `/apd8team/draw/round/<n>/`); every other public page off. Keys live in `Person.url_key`; never run `privateurls generate --overwrite` (breaks shared links).
 
@@ -42,7 +42,7 @@ Still to do (user):
 - Send a test email from the home page tool while logged in via the Funnel URL.
 - Revoke the first app password (see Other open items).
 - Open the site from a phone on mobile data.
-- Tailscale key for `roparcat` expires 2027-04-01: no risk for this event, but disable key expiry if the server will be kept.
+- Disable key expiry for the Linux `roparcat` node in the admin console (key valid until 2027-04-01, so no risk during this event; automating it via Chrome failed on a slow connection).
 - Quit Tailscale on the test PC (or `tailscale down`); it still resolves the URL to its old address.
 - Set an AWS budget alert if not done.
 - `scp` the newest `~/backups/*.dump` to a PC after each round.
@@ -97,8 +97,8 @@ Plan:
 ## Other open items
 - REMINDER: revoke the first `debsoc@iitrpr.ac.in` app password (it was pasted in a chat on 2026-10-03) in the Google account (Security > App passwords). The AWS server already uses a different, new app password (checked), and the old lines were deleted from the test PC's `.env`, so revoking breaks nothing.
 - Test PC (2026-10-04): C: filled up during a rebuild and crashed Docker; data was fine and the site came back via `restart: unless-stopped`. Rebuilds then failed on a flaky connection (pypi timeouts), so the test PC still runs the image from before `573f22ff4`: email is not active there. Email gets enabled and tested on AWS instead. Watch free disk space before rebuilding (`docker builder prune -af` frees build cache; the volume is untouched).
-- Email: SMTP via the society account `debsoc@iitrpr.ac.in` (Google Workspace, app password). `docker.py` reads `DEFAULT_FROM_EMAIL`, `EMAIL_HOST` (`smtp.gmail.com`), `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_PORT` (587), `EMAIL_USE_TLS` from `.env` (compose passes `.env` to web and worker via `env_file`); without `EMAIL_HOST` no email is sent. The password lives only in `.env`, never in git. Each server needs these lines in its own `.env`. No `apd8team` participant has an email address yet. Send emails while browsing via the Funnel URL, not localhost, since links are built from the request host.
-- APD test: Round 1 draw is released. Still: decide on the "Use Private URLs" preset (ballot and feedback via private links). Only Round 1 exists; add rounds in Edit Database.
+- Email: SMTP via the society account `debsoc@iitrpr.ac.in` (Google Workspace, app password). `docker.py` reads `DEFAULT_FROM_EMAIL`, `EMAIL_HOST` (`smtp.gmail.com`), `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_PORT` (587), `EMAIL_USE_TLS` from `.env` (compose passes `.env` to web and worker via `env_file`); without `EMAIL_HOST` no email is sent. The password lives only in `.env`, never in git. Each server needs these lines in its own `.env`. Participants need email addresses (CSV import or Edit Database) before private-URL emails reach anyone. Send emails while browsing via the Funnel URL, not localhost, since links are built from the request host.
+- Real tournament (to be created by the user on production): import teams, adjudicators, rooms and rounds; generate private URLs; decide on the "Use Private URLs" preset (ballot and feedback via private links); add participant emails before sending links.
 - Port 8000 is published on `0.0.0.0`; with Funnel it could be bound to `127.0.0.1`.
 - Decide on the upstream donation text, the "Our Organisation" footer block, the 500 page bug-report links, and `ADMINS` in `tabbycat/settings/core.py`.
 - 5 apps on `develop` (actionlog, checkins, participants, results, users) have model changes with no migration (pre-existing, from upstream).
