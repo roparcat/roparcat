@@ -25,6 +25,7 @@ Done:
 - Dockerfile fails loudly on bad downloads (`d591509bd`). User-facing name is RoparCat (`4c773db69`); Tabbycat credited in footer and meta description.
 - Public via Tailscale Funnel at https://roparcat.tailcee4ed.ts.net/. nginx forwards `X-Forwarded-Proto` and `docker.py` sets `SECURE_PROXY_SSL_HEADER`, so absolute links (private URLs, emails) are `https://` (`386a14ca4`).
 - Hardened for public hosting (`056d9f345`): `SECRET_KEY` from `.env`, `DEBUG=0`, `restart: unless-stopped`, `*.dump` ignored. Pushed to `origin/develop`.
+- Email over SMTP (`573f22ff4`): settings come from `.env`; not active on the test PC yet (see Other open items).
 - Test tournaments in the `pgdata` volume:
   - `australs24team`: demo, rounds 1-3 simulated, public draw/standings/tabs on.
   - `apd8team`: dummy APD (UADC preset), 8 teams x 3 speakers, 5 adjs, 1 round (no draw yet), private URLs for everyone. Public draw on ("all released rounds", `/apd8team/draw/round/<n>/`); every other public page off. Keys live in `Person.url_key`; never run `privateurls generate --overwrite` (breaks shared links).
@@ -38,7 +39,7 @@ The test PC is only for development. Production runs on one EC2 instance, reache
 - Steps:
   1. Install Docker (`curl -fsSL https://get.docker.com | sudo sh`, add `ubuntu` to the `docker` group).
   2. `git clone https://github.com/roparcat/roparcat.git && git checkout develop`.
-  3. Create a fresh `.env` with `SECRET_KEY` (see Docker gotchas). Never copy the test PC's key.
+  3. Create a fresh `.env` with `SECRET_KEY` (see Docker gotchas) plus the `EMAIL_*` lines (see Other open items). Never copy the test PC's key.
   4. Move the DB: on the test PC `pg_dump -Fc -f /tmp/roparcat.dump` inside `db`, `docker compose cp` it out, `scp` it up. On the server `docker compose up -d db`, copy it in, `pg_restore --clean --if-exists --no-owner`, then `docker compose up -d --build`. Check `/apd8team/privateurls/rgl1014x/` returns 200 (proves keys survived). Don't redirect the dump with `>` in PowerShell, it corrupts it.
   5. Tailscale: `tailscale funnel reset` on the old machine, remove/rename it in the admin console so the name `roparcat` is free, then on the server `tailscale up --hostname=roparcat` and `tailscale funnel --bg 8000`. Disable key expiry for the node. Test from a phone on mobile data.
   6. Hourly backups via cron (`docker compose exec -T db pg_dump -U tabbycat -Fc tabbycat > ~/backups/...`); `scp` them down after each round.
@@ -79,7 +80,9 @@ Plan:
 4. Don't do this while the tournament is live (2026-10-03 to 08) unless it's tested on the test PC first; a rebuild restarts the site.
 
 ## Other open items
-- Email: no provider configured, and `docker.py` reads no `EMAIL_*` settings yet (copy the block from `heroku.py`, secrets in `.env`). No `apd8team` participant has an email address. Send emails while browsing via the Funnel URL, not localhost, since links are built from the request host.
+- REMINDER: revoke the first `debsoc@iitrpr.ac.in` app password (it was pasted in a chat on 2026-10-03). Create a new one for the AWS server's `.env`, confirm email works there, then revoke the old one in the Google account (Security > App passwords). The test PC's `.env` still holds the old one; replace or delete those lines too.
+- Test PC (2026-10-04): C: filled up during a rebuild and crashed Docker; data was fine and the site came back via `restart: unless-stopped`. Rebuilds then failed on a flaky connection (pypi timeouts), so the test PC still runs the image from before `573f22ff4`: email is not active there. Email gets enabled and tested on AWS instead. Watch free disk space before rebuilding (`docker builder prune -af` frees build cache; the volume is untouched).
+- Email: SMTP via the society account `debsoc@iitrpr.ac.in` (Google Workspace, app password). `docker.py` reads `DEFAULT_FROM_EMAIL`, `EMAIL_HOST` (`smtp.gmail.com`), `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_PORT` (587), `EMAIL_USE_TLS` from `.env` (compose passes `.env` to web and worker via `env_file`); without `EMAIL_HOST` no email is sent. The password lives only in `.env`, never in git. Each server needs these lines in its own `.env`. No `apd8team` participant has an email address yet. Send emails while browsing via the Funnel URL, not localhost, since links are built from the request host.
 - APD test: generate and release the Round 1 draw; decide on the "Use Private URLs" preset (ballot and feedback via private links). Only Round 1 exists; add rounds in Edit Database.
 - Port 8000 is published on `0.0.0.0`; with Funnel it could be bound to `127.0.0.1`.
 - Decide on the upstream donation text, the "Our Organisation" footer block, the 500 page bug-report links, and `ADMINS` in `tabbycat/settings/core.py`.
