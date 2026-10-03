@@ -46,3 +46,14 @@ if bool(int(os.environ['DOCKER_REDIS'])) if 'DOCKER_REDIS' in os.environ else Fa
             },
         },
     }
+
+# Email over SMTP, configured in .env (see CLAUDE.md); without EMAIL_HOST no
+# email is sent
+if os.environ.get('EMAIL_HOST', ''):
+    SERVER_EMAIL = os.environ['DEFAULT_FROM_EMAIL']
+    DEFAULT_FROM_EMAIL = os.environ['DEFAULT_FROM_EMAIL']
+    EMAIL_HOST = os.environ['EMAIL_HOST']
+    EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+    EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'true').lower() == 'true'
