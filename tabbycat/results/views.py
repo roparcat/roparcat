@@ -580,6 +580,9 @@ class BasePublicNewBallotSetView(PersonalizablePublicTournamentPageMixin, RoundM
             return self.error_page(_("It looks like you're assigned to two or more debates this round. "
                     "Please contact a tab room official."))
 
+        if self.debateadj.type != DebateAdjudicator.TYPE_CHAIR:
+            return self.error_page(_("Only the chair of your panel submits the ballot for this debate."))
+
         self.debate = self.debateadj.debate
         self.ballotsub = BallotSubmission(debate=self.debate, ip_address=get_ip_address(self.request),
             submitter_type=BallotSubmission.Submitter.PUBLIC, single_adj=self.tournament.pref('individual_ballots'),
